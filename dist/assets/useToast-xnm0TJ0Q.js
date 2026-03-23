@@ -1,0 +1,1 @@
+import{U as c}from"./index-CEIonSD8.js";function s(){const r=c("toast");return{success(e){r==null||r.add(e,"success")},error(e){r==null||r.add(e,"error")},info(e){r==null||r.add(e,"info")}}}export{s as u};
