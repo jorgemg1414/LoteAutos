@@ -56,8 +56,8 @@
             </div>
           </Transition>
 
-          <button type="submit" class="btn-primary w-full justify-center mt-2">
-            Iniciar sesión
+          <button type="submit" :disabled="auth.loading" class="btn-primary w-full justify-center mt-2 disabled:opacity-60 disabled:cursor-not-allowed">
+            {{ auth.loading ? 'Verificando...' : 'Iniciar sesión' }}
           </button>
         </form>
       </div>
@@ -72,10 +72,11 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter, RouterLink } from 'vue-router'
+import { useRouter, useRoute, RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
 
 const user = ref('')
@@ -83,12 +84,13 @@ const pass = ref('')
 const error = ref(false)
 const showPass = ref(false)
 
-function submit() {
+async function submit() {
   error.value = false
-  const ok = auth.login(user.value, pass.value)
-  if (ok) {
-    router.push('/admin/dashboard')
-  } else {
+  try {
+    await auth.login(user.value, pass.value)
+    const redirect = route.query.redirect
+    router.push(typeof redirect === 'string' ? redirect : '/admin/dashboard')
+  } catch {
     error.value = true
   }
 }

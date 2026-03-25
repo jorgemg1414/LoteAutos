@@ -4,7 +4,9 @@
       "Read(//Users/jorge/Documents/**)",
       "Bash(npm create:*)",
       "Bash(npm init:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(find /home/jorge/Documentos/LoteAutos/LoteAutos -not -path */node_modules/* -not -path */.git/* -not -path */dist/* -type f)",
+      "Bash(npx vite:*)"
     ]
   }
 }

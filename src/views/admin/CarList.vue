@@ -166,7 +166,7 @@ const PER_PAGE = 15
 const deleteModal = ref(false)
 const carToDelete = ref(null)
 
-onMounted(() => carsStore.load())
+onMounted(() => carsStore.load(true))
 
 const filteredCars = computed(() => {
   let list = carsStore.cars

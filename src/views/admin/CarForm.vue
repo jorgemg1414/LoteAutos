@@ -317,8 +317,8 @@ const form = reactive({
   fechaAgregado: new Date().toISOString(),
 })
 
-onMounted(() => {
-  carsStore.load()
+onMounted(async () => {
+  await carsStore.load(true)
   if (isEdit.value) {
     const car = carsStore.getById(route.params.id)
     if (car) Object.assign(form, car)

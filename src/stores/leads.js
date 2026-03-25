@@ -1,48 +1,39 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { storage } from '@/utils/storage'
-import { seedLeads } from '@/utils/seedData'
+import { api } from '@/utils/api'
 
 export const useLeadsStore = defineStore('leads', () => {
-  // Inicializa con seed si está vacío
-  function init() {
-    const existing = storage.get('leads')
-    if (!existing) {
-      storage.set('leads', seedLeads)
-    }
-  }
-
   const leads = ref([])
+  const loading = ref(false)
 
-  function load() {
-    init()
-    leads.value = storage.get('leads') || []
-  }
-
-  function save(lead) {
-    const newLead = {
-      id: 'l' + Date.now(),
-      fecha: new Date().toISOString(),
-      estado: 'Pendiente',
-      ...lead,
+  async function load() {
+    loading.value = true
+    try {
+      const data = await api.get('/leads')
+      leads.value = data.leads ?? []
+    } finally {
+      loading.value = false
     }
-    leads.value = [newLead, ...leads.value]
-    storage.set('leads', leads.value)
-    return newLead
   }
 
-  function updateStatus(id, estado) {
-    leads.value = leads.value.map(l => l.id === id ? { ...l, estado } : l)
-    storage.set('leads', leads.value)
+  /** Envía un nuevo lead desde el formulario de contacto (público). */
+  async function save(lead) {
+    const data = await api.post('/leads', lead)
+    return data.lead
   }
 
-  function remove(id) {
-    leads.value = leads.value.filter(l => l.id !== id)
-    storage.set('leads', leads.value)
+  async function updateStatus(id, estado) {
+    const data = await api.put(`/leads/${id}`, { estado })
+    leads.value = leads.value.map((l) => (l.id === id ? data.lead : l))
   }
 
-  const pendingCount = computed(() => leads.value.filter(l => l.estado === 'Pendiente').length)
-  const recent = computed(() => leads.value.slice(0, 5))
+  async function remove(id) {
+    await api.delete(`/leads/${id}`)
+    leads.value = leads.value.filter((l) => l.id !== id)
+  }
 
-  return { leads, pendingCount, recent, load, save, updateStatus, remove }
+  const pendingCount = computed(() => leads.value.filter((l) => l.estado === 'Pendiente').length)
+  const recent       = computed(() => leads.value.slice(0, 5))
+
+  return { leads, loading, pendingCount, recent, load, save, updateStatus, remove }
 })

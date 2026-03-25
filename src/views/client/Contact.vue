@@ -140,10 +140,9 @@ function validate() {
   return !Object.values(errors).some(Boolean)
 }
 
-function submit() {
+async function submit() {
   if (!validate()) return
-  leadsStore.load()
-  leadsStore.save({ ...form })
+  await leadsStore.save({ ...form })
   sent.value = true
   form.nombre = ''; form.email = ''; form.telefono = ''; form.autoInteres = ''; form.mensaje = ''
 }

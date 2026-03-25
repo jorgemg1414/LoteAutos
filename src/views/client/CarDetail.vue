@@ -250,16 +250,13 @@ import { ref, computed, onMounted, reactive, watch } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { useCarsStore } from '@/stores/cars'
 import { useFavoritesStore } from '@/stores/favorites'
-import { useLeadsStore } from '@/stores/leads'
 import { useToast } from '@/components/common/useToast'
 import CarCard from '@/components/catalog/CarCard.vue'
 import { formatPrice, conditionColor, isNewlyAdded, whatsappLink, calcMensualidad } from '@/utils/formatters'
-import { incrementViewCount, getViewCount } from '@/utils/storage'
 
 const route = useRoute()
 const carsStore = useCarsStore()
 const favStore = useFavoritesStore()
-const leadsStore = useLeadsStore()
 const toast = useToast()
 
 const car = ref(null)
@@ -347,30 +344,32 @@ function copyLink() {
   toast.success('Enlace copiado al portapapeles')
 }
 
-onMounted(() => {
-  carsStore.load()
-  leadsStore.load()
+onMounted(async () => {
   const id = route.params.id
-  car.value = carsStore.getById(id)
-  loading.value = false
-
-  if (car.value) {
-    // Incrementar contador de vistas
-    viewCount.value = incrementViewCount(id)
-    // SEO dinámico
-    document.title = `${car.value.marca} ${car.value.modelo} ${car.value.año} — LoteAutos`
-    // Inicializar calculadora
-    calc.enganche = car.value.enganche || Math.round(car.value.precio * 0.2)
+  try {
+    // fetchById llama GET /api/cars/:id que incrementa vistas en el servidor
+    const fetched = await carsStore.fetchById(id)
+    car.value = fetched
+    viewCount.value = fetched.vistas
+    document.title = `${fetched.marca} ${fetched.modelo} ${fetched.año} — LoteAutos`
+    calc.enganche = fetched.enganche || Math.round(fetched.precio * 0.2)
+  } catch {
+    car.value = null
+  } finally {
+    loading.value = false
   }
 })
 
 // Reset imagen al cambiar de auto
-watch(() => route.params.id, (id) => {
-  car.value = carsStore.getById(id)
+watch(() => route.params.id, async (id) => {
   activeImg.value = 0
-  if (car.value) {
-    viewCount.value = incrementViewCount(id)
-    document.title = `${car.value.marca} ${car.value.modelo} ${car.value.año} — LoteAutos`
+  try {
+    const fetched = await carsStore.fetchById(id)
+    car.value = fetched
+    viewCount.value = fetched.vistas
+    document.title = `${fetched.marca} ${fetched.modelo} ${fetched.año} — LoteAutos`
+  } catch {
+    car.value = null
   }
 })
 </script>

@@ -72,9 +72,11 @@ const router = createRouter({
 })
 
 // Guard de autenticación para rutas admin
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   if (to.meta.requiresAuth) {
     const auth = useAuthStore()
+    // Verifica la sesión en el servidor si aún no se ha inicializado
+    await auth.init()
     if (!auth.isAuthenticated) {
       return next({ name: 'AdminLogin', query: { redirect: to.fullPath } })
     }
